@@ -132,8 +132,10 @@ int probe_memcg_account(int token_fd)
 	prog_fd = sys_bpf_fd(BPF_PROG_LOAD, &attr, attr_sz);
 	if (prog_fd >= 0) {
 		close(prog_fd);
+		fprintf(stderr, "probe_memcg_account: success (memcg accounting available)\n");
 		return 1;
 	}
+	fprintf(stderr, "probe_memcg_account: failed (falling back to rlimit)\n");
 	return 0;
 }
 
@@ -151,6 +153,10 @@ int libbpf_set_memlock_rlim(size_t memlock_bytes)
 
 int bump_rlimit_memlock(void)
 {
+	/* Bypass rlimit: temporary for debugging */
+	fprintf(stderr, "skip rlimit memlock as it is deprecated");
+	return 0;
+
 	struct rlimit rlim;
 
 	/* if kernel supports memcg-based accounting, skip bumping RLIMIT_MEMLOCK */
