@@ -116,7 +116,12 @@ int probe_memcg_account(int token_fd)
 
 	/* attempt loading freplace trying to use custom BTF */
 	memset(&attr, 0, attr_sz);
-	attr.prog_type = BPF_PROG_TYPE_SOCKET_FILTER;
+	/*
+	 * Set supported program type:
+	 * https://docs.ebpf.io/linux/helper-function/bpf_ktime_get_coarse_ns/
+	 * BPF_PROG_TYPE_SOCKET_FILTER is not supported.
+	 */
+	attr.prog_type = BPF_PROG_TYPE_SOCK_OPS;
 	attr.insns = ptr_to_u64(insns);
 	attr.insn_cnt = insn_cnt;
 	attr.license = ptr_to_u64("GPL");
