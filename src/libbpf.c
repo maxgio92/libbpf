@@ -300,6 +300,7 @@ static void pr_perm_msg(int err)
 	if (err != -EPERM || geteuid() != 0)
 		return;
 
+	printf("I'm running pr_perm_msg");
 	err = getrlimit(RLIMIT_MEMLOCK, &limit);
 	if (err)
 		return;

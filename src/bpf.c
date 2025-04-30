@@ -105,6 +105,9 @@ int sys_bpf_prog_load(union bpf_attr *attr, unsigned int size, int attempts)
  */
 int probe_memcg_account(int token_fd)
 {
+	fprintf(stderr, "probe_memcg_account started.\n");
+	//fprintf(stderr, "probe_memcg_account just returns supported=true\n");
+	//return 1;
 	const size_t attr_sz = offsetofend(union bpf_attr, prog_token_fd);
 	struct bpf_insn insns[] = {
 		BPF_EMIT_CALL(BPF_FUNC_ktime_get_coarse_ns),
@@ -121,6 +124,8 @@ int probe_memcg_account(int token_fd)
 	 * https://docs.ebpf.io/linux/helper-function/bpf_ktime_get_coarse_ns/
 	 * BPF_PROG_TYPE_SOCKET_FILTER is not supported.
 	 */
+
+	fprintf(stderr, "probe_memcg_account sets probe BPF_PROG_TYPE_SOCK_OPS (correct prog type).\n");
 	attr.prog_type = BPF_PROG_TYPE_SOCK_OPS;
 	attr.insns = ptr_to_u64(insns);
 	attr.insn_cnt = insn_cnt;
@@ -153,23 +158,31 @@ int libbpf_set_memlock_rlim(size_t memlock_bytes)
 
 int bump_rlimit_memlock(void)
 {
-	/* Bypass rlimit: temporary for debugging */
-	fprintf(stderr, "skip rlimit memlock as it is deprecated");
+	fprintf(stderr, "bump_rlimit_memlock skips to bump memory limit\n");
 	return 0;
+
+	fprintf(stderr, "bump_rlimit_memlock attempts to bump memory limit\n");
 
 	struct rlimit rlim;
 
 	/* if kernel supports memcg-based accounting, skip bumping RLIMIT_MEMLOCK */
-	if (memlock_bumped || feat_supported(NULL, FEAT_MEMCG_ACCOUNT))
+	if (memlock_bumped || feat_supported(NULL, FEAT_MEMCG_ACCOUNT)) {
+		fprintf(stderr, "bump_rlimit_memlock skips settings rlimit: or memlock already bumped or FEAT_MEMCG_ACCOUNT feature is supported.\n");
 		return 0;
+	}
+
+	fprintf(stderr, "bump_rlimit_memlock falls back to rlimit: FEAT_MEMCG_ACCOUNT feature is not supported.\n");
 
 	memlock_bumped = true;
 
 	/* zero memlock_rlim_max disables auto-bumping RLIMIT_MEMLOCK */
-	if (memlock_rlim == 0)
+	if (memlock_rlim == 0) {
+		fprintf(stderr, "bump_rlimit_memlock skips setrlimit: memlock_rlim_max is zero (zero memlock_rlim_max disables auto-bumping RLIMIT_MEMLOCK)\n");
 		return 0;
+	}
 
 	rlim.rlim_cur = rlim.rlim_max = memlock_rlim;
+	fprintf(stderr, "bump_rlimit_memlock calls setrlimit with RLIMIT_MEMLOCK &rlim.rlim_cur = memlock_rlim;\n");
 	if (setrlimit(RLIMIT_MEMLOCK, &rlim))
 		return -errno;
 

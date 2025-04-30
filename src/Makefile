@@ -58,7 +58,9 @@ STATIC_OBJDIR := $(OBJDIR)/staticobjs
 OBJS := bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o \
 	btf_dump.o hashmap.o ringbuf.o strset.o linker.o gen_loader.o \
-	relo_core.o usdt.o zip.o elf.o features.o btf_iter.o btf_relocate.o
+	relo_core.o usdt.o zip.o elf.o features.o btf_iter.o btf_relocate.o \
+	test_probe_memcg.o
+
 SHARED_OBJS := $(addprefix $(SHARED_OBJDIR)/,$(OBJS))
 STATIC_OBJS := $(addprefix $(STATIC_OBJDIR)/,$(OBJS))
 
@@ -187,3 +189,11 @@ tags:
 	$(Q)ls *.c *.h | xargs $(TAGS_PROG) -a
 
 force:
+
+test_probe_memcg:
+	rm -rf $(SHARED_OBJDIR)
+	rm -rf $(STATIC_OBJDIR)
+	rm -f test_probe_memcg
+	$(MAKE) -j
+	cc $(STATIC_OBJDIR)/test_probe_memcg.o libbpf.a -lelf -lz -L. -o test_probe_memcg
+
